@@ -379,6 +379,49 @@ function get_chern(m_op::Vector{Int})::Float64
     return c
 end
 
+function fix_pixels(chern0::Matrix{Int64})::Matrix{Int64}
+    # Get the dimensions of the matrix
+    rows, cols = size(chern0)
+    
+    # Create a copy of the matrix to store the corrected values
+    corrected_chern0 = copy(chern0)
+    
+    # Function to get the neighbors of an element
+    function get_neighbors(matrix, i, j)
+        neighbors = []
+        for di in -1:1
+            for dj in -1:1
+                if di == 0 && dj == 0
+                    continue
+                end
+                ni, nj = i + di, j + dj
+                if ni > 0 && ni <= rows && nj > 0 && nj <= cols
+                    push!(neighbors, matrix[ni, nj])
+                end
+            end
+        end
+        return neighbors
+    end
+    
+    # Iterate through each element in the matrix
+    for i in 1:rows
+        for j in 1:cols
+            neighbors = get_neighbors(chern0, i, j)
+            value_counts = countmap(neighbors)
+            
+            # Check if more than 6 neighbors have the same value different from chern0[i,j]
+            for (value, count) in value_counts
+                if count > 6 && value != chern0[i, j]
+                    corrected_chern0[i, j] = value
+                    break
+                end
+            end
+        end
+    end
+    return corrected_chern0
+end
+
+
 function get_chern_old(m_op::Vector{Int})::Float64
     # Compute chern number of a cosine operator packaged inside a vector m_op
     # We do this by counting gapless edge modes in a finite sample 
@@ -464,47 +507,6 @@ function F_of_x_y_z_quadgk(pl::Float64, ql::Float64, c::Float64)::Float64 # Gene
     return total_val
 end
 
-function fix_pixels(chern0::Matrix{Int64})::Matrix{Int64}
-    # Get the dimensions of the matrix
-    rows, cols = size(chern0)
-    
-    # Create a copy of the matrix to store the corrected values
-    corrected_chern0 = copy(chern0)
-    
-    # Function to get the neighbors of an element
-    function get_neighbors(matrix, i, j)
-        neighbors = []
-        for di in -1:1
-            for dj in -1:1
-                if di == 0 && dj == 0
-                    continue
-                end
-                ni, nj = i + di, j + dj
-                if ni > 0 && ni <= rows && nj > 0 && nj <= cols
-                    push!(neighbors, matrix[ni, nj])
-                end
-            end
-        end
-        return neighbors
-    end
-    
-    # Iterate through each element in the matrix
-    for i in 1:rows
-        for j in 1:cols
-            neighbors = get_neighbors(chern0, i, j)
-            value_counts = countmap(neighbors)
-            
-            # Check if more than 6 neighbors have the same value different from chern0[i,j]
-            for (value, count) in value_counts
-                if count > 6 && value != chern0[i, j]
-                    corrected_chern0[i, j] = value
-                    break
-                end
-            end
-        end
-    end
-    return corrected_chern0
-end
 
 end
 
